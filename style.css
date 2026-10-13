@@ -5,3 +5,6 @@
 
 /* Pagine di approfondimento indipendenti */
 .detail-backbar{padding-top:42px;padding-bottom:18px}.detail-backbar a{color:#183b2b;font-weight:700;text-decoration:none}.detail-backbar a:hover{text-decoration:underline}.standalone-detail{margin:10px auto 90px!important;max-width:1160px}.standalone-detail .detail-gallery img{object-fit:cover}@media(max-width:650px){.detail-backbar{padding-top:25px}.standalone-detail{margin-bottom:55px!important}}
+
+/* Social footer */
+.social{display:flex;gap:10px;margin-top:8px}.social a{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#ffffff14;border:1px solid #ffffff26;color:#e9f1e8!important;transition:.2s}.social a[href]{cursor:pointer}.social a[href]:hover{background:#ffffff2b;transform:translateY(-2px)}.social svg{width:20px;height:20px}
