@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<meta name="theme-color" content="#183b2b"/>
+<title>Area riservata | Ape Attiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="admin.css?v=1"/>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<section id="login" class="login" hidden>
+  <div class="login-card">
+    <a class="brand" href="index.html"><span class="brand-icon">✳</span><span>APE ATTIVA<small>AREA RISERVATA</small></span></a>
+    <h1>Accedi al CRM</h1>
+    <p class="muted">Gestione clienti, lavori e andamento del sito.</p>
+    <form id="login-form" autocomplete="on" novalidate>
+      <label>Username
+        <input name="username" autocomplete="username" required autocapitalize="off" spellcheck="false"/>
+      </label>
+      <label>Password
+        <span class="pw">
+          <input name="password" type="password" autocomplete="current-password" required/>
+          <button type="button" class="eye" aria-label="Mostra password" data-eye></button>
+        </span>
+      </label>
+      <p class="form-error" id="login-error" role="alert" hidden></p>
+      <button class="btn primary wide" type="submit">Entra ↗</button>
+    </form>
+    <a class="back-site" href="index.html">← Torna al sito</a>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="app" class="app" hidden>
+  <aside class="side">
+    <a class="brand" href="index.html" title="Vai al sito"><span class="brand-icon">✳</span><span>APE ATTIVA<small>CRM</small></span></a>
+    <nav class="side-nav" id="nav">
+      <a href="#dashboard" data-view="dashboard"><i data-ico="home"></i><span>Dashboard</span></a>
+      <a href="#clienti" data-view="clienti"><i data-ico="users"></i><span>Clienti</span></a>
+      <a href="#lavori" data-view="lavori"><i data-ico="tool"></i><span>Lavori</span></a>
+      <a href="#richieste" data-view="richieste"><i data-ico="inbox"></i><span>Richieste</span><b class="badge" id="badge-richieste" hidden></b></a>
+      <a href="#statistiche" data-view="statistiche"><i data-ico="chart"></i><span>Statistiche</span></a>
+      <a href="#impostazioni" data-view="impostazioni"><i data-ico="gear"></i><span>Impostazioni</span></a>
+    </nav>
+    <div class="side-foot">
+      <span class="who" id="who"></span>
+      <button class="link" id="logout" type="button">Esci</button>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <span class="kicker" id="view-kicker">CRM</span>
+        <h1 id="view-title">Dashboard</h1>
+      </div>
+      <div class="top-actions" id="top-actions"></div>
+    </header>
+    <div id="view" class="view"></div>
+  </main>
+</div>
+
+<!-- Modale generica -->
+<div class="modal-wrap" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <header class="modal-head">
+      <h2 id="modal-title"></h2>
+      <button class="icon-btn" type="button" data-close aria-label="Chiudi">✕</button>
+    </header>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="tip" id="tip" hidden></div>
+<div class="boot" id="boot"><span class="spinner"></span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js?v=1"></script>
+<script src="admin.js?v=1"></script>
+</body>
+</html>

@@ -8,3 +8,8 @@
 
 /* Social footer */
 .social{display:flex;gap:10px;margin-top:8px}.social a{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#ffffff14;border:1px solid #ffffff26;color:#e9f1e8!important;transition:.2s}.social a[href]{cursor:pointer}.social a[href]:hover{background:#ffffff2b;transform:translateY(-2px)}.social svg{width:20px;height:20px}
+
+/* Ingranaggio area riservata */
+.admin-gear{position:fixed;z-index:26;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#ffffffe6;color:#183b2b;border:1px solid #d5ddd2;box-shadow:0 6px 18px #0000001f;opacity:.75;transition:.2s}
+.admin-gear:hover{opacity:1;transform:rotate(45deg)}
+@media(max-width:650px){.admin-gear{bottom:78px;right:14px;width:38px;height:38px}}
