@@ -58,7 +58,7 @@ const PAGINE = { '/': 'Home', '/index.html': 'Home', '/terreni.html': 'Terreni e
 const opts = (map, sel) => Object.entries(map).map(([k, v]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${esc(v)}</option>`).join('');
 const chip = (cls, label) => `<span class="chip ${esc(cls)}">${esc(label)}</span>`;
 const statoPag = l => {
-  if (l.stato === 'annullato' || Number(l.totale) <= 0) return 'na';
+  if (['annullato', 'preventivo'].includes(l.stato) || Number(l.totale) <= 0) return 'na';
   if (Number(l.residuo) <= 0.004) return 'saldato';
   if (Number(l.incassato) > 0) return 'acconto';
   return 'da_incassare';
@@ -238,7 +238,7 @@ async function viewDashboard(el) {
 
   el.innerHTML = `
     <div class="kpis">
-      <div class="kpi dark"><small>Da incassare</small><strong>${eur(totDaInc)}</strong><span>${daIncassare.length} lavori con residuo</span></div>
+      <div class="kpi dark"><small>Da incassare</small><strong>${eur(totDaInc)}</strong><span>${daIncassare.length} ${daIncassare.length === 1 ? 'lavoro' : 'lavori'} con residuo</span></div>
       <div class="kpi"><small>Incassato ${anno}</small><strong id="k-inc">…</strong><span>acconti e saldi registrati</span></div>
       <div class="kpi"><small>Lavori attivi</small><strong>${inCorso.length}</strong><span>accettati o in corso</span></div>
       <div class="kpi"><small>Preventivi aperti</small><strong>${preventivi.length}</strong><span>valore ${eur(valPrev)}</span></div>
