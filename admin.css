@@ -234,3 +234,7 @@ td strong{color:var(--forest)}
   .login-card{padding:24px}
   .toolbar input[type=search]{max-width:none}
 }
+
+/* Logo */
+.brand-logo{width:46px;height:46px;flex:none;object-fit:contain;filter:drop-shadow(0 2px 5px #0b1f1426)}
+.login-card .brand-logo{width:72px;height:72px}

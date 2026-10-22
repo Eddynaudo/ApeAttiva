@@ -86,6 +86,7 @@ function openModal(title, html, size = '') {
   $('.modal').className = 'modal ' + size;
   $('#modal').hidden = false;
   document.body.style.overflow = 'hidden';
+  window.ApeComuni && window.ApeComuni.scan($('#modal-body'));
   const f = $('#modal-body input:not([type=hidden]), #modal-body select, #modal-body textarea');
   if (f && window.matchMedia('(min-width:861px)').matches) setTimeout(() => f.focus(), 30);
   return $('#modal-body');
@@ -180,6 +181,8 @@ async function showApp(user) {
   $$('#nav i[data-ico]').forEach(i => (i.innerHTML = ico(i.dataset.ico)));
   try { await loadAll(); } catch (e) { toast(errMsg(e), true); }
   route();
+  sincronizzaPush();
+  if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
 }
 $('#login-form').addEventListener('submit', async e => {
   e.preventDefault();
@@ -236,7 +239,7 @@ async function viewDashboard(el) {
   const nuove = S.richieste.filter(r => r.stato === 'nuova');
   const anno = new Date().getFullYear();
 
-  el.innerHTML = `
+  el.innerHTML = `<div id="push-banner"></div>
     <div class="kpis">
       <div class="kpi dark"><small>Da incassare</small><strong>${eur(totDaInc)}</strong><span>${daIncassare.length} ${daIncassare.length === 1 ? 'lavoro' : 'lavori'} con residuo</span></div>
       <div class="kpi"><small>Incassato ${anno}</small><strong id="k-inc">…</strong><span>acconti e saldi registrati</span></div>
@@ -252,6 +255,7 @@ async function viewDashboard(el) {
       <div class="panel"><h3>Visite ultimi 30 giorni <a class="link" href="#statistiche">Dettagli</a></h3><div class="chart" id="dash-chart"><p class="muted">Caricamento…</p></div></div>
     </div>`;
   bindRows(el);
+  bannerNotifiche($('#push-banner', el));
 
   try {
     const pag = await q(sb.from('pagamenti').select('importo').gte('data', anno + '-01-01'));
@@ -350,7 +354,7 @@ function formCliente(c = null, after) {
     <div class="grid g3">
       <label>Referente<input name="referente" value="${esc(c.referente)}"/></label>
       <label class="span2">Indirizzo<input name="indirizzo" value="${esc(c.indirizzo)}"/></label>
-      <label>Comune<input name="comune" value="${esc(c.comune)}"/></label>
+      <label>Comune<input name="comune" data-comuni value="${esc(c.comune)}"/></label>
       <label>Provincia<input name="provincia" maxlength="2" placeholder="GE" value="${esc(c.provincia)}" style="text-transform:uppercase"/></label>
       <label>CAP<input name="cap" inputmode="numeric" maxlength="5" value="${esc(c.cap)}"/></label>
       <label>Codice fiscale<input name="codice_fiscale" style="text-transform:uppercase" value="${esc(c.codice_fiscale)}"/></label>
@@ -362,6 +366,8 @@ function formCliente(c = null, after) {
     <p class="form-error" hidden></p>
     <div class="form-actions"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn primary" type="submit">${n ? 'Crea cliente' : 'Salva modifiche'}</button></div>
   </form>`);
+  const fc = $('form', b);
+  fc.comune.addEventListener('change', () => { const m = fc.comune.value.match(/^(.+) \(([A-Z]{2})\)$/); if (m) { fc.comune.value = m[1]; fc.provincia.value = m[2]; } });
   $('form', b).onsubmit = async e => {
     e.preventDefault();
     const f = e.currentTarget, er = $('.form-error', f), btn = $('[type=submit]', f);
@@ -424,7 +430,7 @@ async function formLavoro(l = null, pre = {}) {
     <div class="grid g3">
       <label class="span2">Titolo del lavoro *<input name="titolo" required maxlength="200" placeholder="Es. Palificata in castagno lato strada" value="${esc(l.titolo)}"/></label>
       <label>Tipo di lavoro<select name="servizio">${opts(SERVIZI, l.servizio)}</select></label>
-      <label>Località intervento<input name="localita" value="${esc(l.localita)}"/></label>
+      <label>Località intervento<input name="localita" data-comuni value="${esc(l.localita)}"/></label>
       <label>Data preventivo<input type="date" name="data_preventivo" value="${esc(l.data_preventivo || '')}"/></label>
       <label>Data inizio<input type="date" name="data_inizio" value="${esc(l.data_inizio || '')}"/></label>
       <label>Data fine<input type="date" name="data_fine" value="${esc(l.data_fine || '')}"/></label>
@@ -646,7 +652,7 @@ function pannelloSEO() {
 /* ================= IMPOSTAZIONI ================= */
 function viewImpostazioni(el) {
   let noTrack = true; try { noTrack = localStorage.getItem('ape_no_track') === '1'; } catch (_) {}
-  el.innerHTML = `<div class="panels cols-2">
+  el.innerHTML = `<div class="panel" id="push-panel" style="margin-bottom:16px"><p class="muted" style="margin:0">Caricamento notifiche…</p></div><div class="panels cols-2">
     <div class="panel"><h3>Cambia password</h3>
       <form id="fpw" novalidate style="display:grid;gap:14px">
         <label>Password attuale<span class="pw"><input type="password" name="old" autocomplete="current-password" required/><button type="button" class="eye" data-eye></button></span></label>
@@ -666,6 +672,7 @@ function viewImpostazioni(el) {
         <div class="quick"><button class="btn ghost sm" data-x="clienti">Clienti</button><button class="btn ghost sm" data-x="lavori">Lavori</button><button class="btn ghost sm" data-x="pagamenti">Pagamenti</button><button class="btn ghost sm" data-x="richieste">Richieste</button></div></div>
     </div></div>`;
   initEyes(el);
+  pannelloNotifiche($('#push-panel', el));
   $('#out2').onclick = () => $('#logout').click();
   $('#nt').onchange = e => { try { localStorage.setItem('ape_no_track', e.target.checked ? '1' : '0'); } catch (_) {} toast(e.target.checked ? 'Le tue visite non verranno conteggiate' : 'Le tue visite verranno conteggiate'); };
   $$('[data-x]', el).forEach(btn => btn.onclick = () => esporta(btn.dataset.x));
@@ -706,6 +713,122 @@ async function esporta(tipo) {
     a.download = `apeattiva-${tipo}-${today()}.csv`; document.body.appendChild(a); a.click(); a.remove();
     toast(`Esportati ${rows.length} record`);
   } catch (e) { toast(errMsg(e), true); }
+}
+
+/* ================= NOTIFICHE E APP ================= */
+const P = { reg: null, installa: null };
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isApp = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const b64 = s => { const p = '='.repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(r, c => c.charCodeAt(0)); };
+function nomeDispositivo() {
+  const ua = navigator.userAgent;
+  const so = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) || (isIOS && !/iPhone/.test(ua)) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'Dispositivo';
+  const br = /Edg\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : '';
+  return (so + (br ? ' · ' + br : '') + (isApp() ? ' (app)' : '')).slice(0, 200);
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(r => (P.reg = r)).catch(() => {});
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data?.tipo === 'apri' && e.data.url) { const h = new URL(e.data.url).hash; if (h) location.hash = h; loadRichieste().then(rerender).catch(() => {}); } });
+}
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); P.installa = e; if (S.user && ['dashboard', 'impostazioni'].includes(S.view)) rerender(); });
+addEventListener('appinstalled', () => { P.installa = null; toast('App installata ✓'); });
+async function regSW() { if (P.reg) return P.reg; P.reg = await navigator.serviceWorker.register('sw.js'); return P.reg; }
+async function iscrizioneLocale() { if (!pushOk()) return null; const r = await navigator.serviceWorker.getRegistration(); return r ? r.pushManager.getSubscription() : null; }
+async function salvaIscrizione(sub) {
+  const j = sub.toJSON();
+  await q(sb.from('push_iscrizioni').upsert({ user_id: S.user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, dispositivo: nomeDispositivo() }, { onConflict: 'endpoint' }));
+}
+async function attivaNotifiche() {
+  if (!pushOk()) throw new Error(isIOS && !isApp() ? 'Su iPhone installa prima l’app sulla schermata Home.' : 'Questo browser non supporta le notifiche.');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error(perm === 'denied' ? 'Notifiche bloccate: abilitale dalle impostazioni del browser/telefono per questo sito.' : 'Permesso non concesso.');
+  const reg = await regSW(); await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(CFG.vapid) });
+  await salvaIscrizione(sub);
+}
+async function disattivaNotifiche() {
+  const sub = await iscrizioneLocale();
+  if (sub) { await q(sb.from('push_iscrizioni').delete().eq('endpoint', sub.endpoint)); await sub.unsubscribe().catch(() => {}); }
+}
+async function inviaProva() {
+  const { data, error } = await sb.functions.invoke('notifica', { body: { tipo: 'prova' } });
+  if (error) throw error;
+  return data;
+}
+// Riallinea l'iscrizione all'avvio (es. dopo un nuovo login sullo stesso telefono)
+async function sincronizzaPush() { try { if (pushOk() && Notification.permission === 'granted') { const s = await iscrizioneLocale(); if (s) await salvaIscrizione(s); } } catch (_) {} }
+
+function istruzioniIOS() {
+  return `<ol style="margin:8px 0 0;padding-left:20px;line-height:1.8;font-size:.9rem">
+    <li>Apri questa pagina con <b>Safari</b></li><li>Tocca il pulsante <b>Condividi</b> (quadrato con freccia ↑)</li>
+    <li>Scegli <b>Aggiungi alla schermata Home</b> e conferma</li><li>Apri l’app <b>Ape Attiva</b> dalla Home, accedi e attiva le notifiche</li></ol>`;
+}
+async function bannerNotifiche(box) {
+  if (!box) return;
+  let chiuso = false; try { chiuso = localStorage.getItem('ape_push_banner') === 'no'; } catch (_) {}
+  const sub = await iscrizioneLocale().catch(() => null);
+  const attive = sub && Notification.permission === 'granted';
+  if (attive || chiuso || ('Notification' in window && Notification.permission === 'denied')) return;
+  const ios = isIOS && !isApp();
+  if (!ios && !pushOk()) return;
+  box.innerHTML = `<div class="panel" style="margin-bottom:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:var(--forest);color:#fff;border-color:var(--forest)">
+    <img src="img/icon-192.png" alt="" width="52" height="52" style="border-radius:14px;flex:none"/>
+    <div style="flex:1 1 260px"><strong style="font:800 1.05rem Manrope,sans-serif">Ricevi una notifica per ogni nuova richiesta</strong>
+      <div style="color:#c5d8b8;font-size:.88rem">${ios ? 'Su iPhone: installa prima l’app sulla schermata Home.' + istruzioniIOS().replace(/<b>/g, '<b style="color:#fff">') : 'Attivale su questo dispositivo: ti avvisiamo anche ad app chiusa.'}</div></div>
+    <div class="quick">${P.installa ? '<button class="btn light" data-a="inst" style="background:#fff;color:var(--forest)">Installa app</button>' : ''}${ios ? '' : '<button class="btn" data-a="on" style="background:#fff;color:var(--forest)">🔔 Attiva notifiche</button>'}<button class="btn" data-a="x" style="color:#c5d8b8">Più tardi</button></div></div>`;
+  $('[data-a=x]', box).onclick = () => { try { localStorage.setItem('ape_push_banner', 'no'); } catch (_) {} box.innerHTML = ''; };
+  $('[data-a=inst]', box)?.addEventListener('click', async () => { P.installa.prompt(); await P.installa.userChoice; P.installa = null; rerender(); });
+  $('[data-a=on]', box)?.addEventListener('click', async e => {
+    e.target.disabled = true;
+    try { await attivaNotifiche(); box.innerHTML = ''; toast('Notifiche attivate ✓'); inviaProva().catch(() => {}); }
+    catch (x) { toast(x.message || errMsg(x), true); e.target.disabled = false; }
+  });
+}
+async function pannelloNotifiche(box) {
+  const sub = await iscrizioneLocale().catch(() => null);
+  let righe = []; try { righe = await q(sb.from('push_iscrizioni').select('*').order('created_at')); } catch (e) { toast(errMsg(e), true); }
+  const mia = sub && righe.find(r => r.endpoint === sub.endpoint);
+  const ios = isIOS && !isApp(), perm = 'Notification' in window ? Notification.permission : 'n/d';
+  let stato;
+  if (mia && perm === 'granted') stato = '<span class="chip completato">Attive su questo dispositivo</span>';
+  else if (perm === 'denied') stato = '<span class="chip da_incassare">Bloccate dal browser</span>';
+  else stato = '<span class="chip">Non attive su questo dispositivo</span>';
+  box.innerHTML = `<h3>Notifiche sul telefono ${stato}</h3>
+    ${ios ? `<p style="margin:0 0 6px">Su iPhone e iPad le notifiche funzionano solo dall’app installata:</p>${istruzioniIOS()}` : !pushOk() ? '<p class="muted" style="margin:0">Questo browser non supporta le notifiche push. Usa Chrome, Edge, Firefox o Safari aggiornati.</p>' : perm === 'denied' ? '<p class="muted" style="margin:0 0 10px">Hai bloccato le notifiche per questo sito: riattivale dalle impostazioni del browser (icona del lucchetto accanto all’indirizzo) o del telefono, poi ricarica la pagina.</p>' : ''}
+    ${mia ? `<div style="display:grid;gap:10px;margin:6px 0 14px">
+      <label style="flex-direction:row;align-items:center;gap:10px;font-weight:600;color:var(--ink)"><input type="checkbox" data-pref="notifica_richieste" style="width:18px;height:18px"${mia.notifica_richieste ? ' checked' : ''}/> Nuove richieste di preventivo dal sito</label>
+      <label style="flex-direction:row;align-items:center;gap:10px;font-weight:600;color:var(--ink)"><input type="checkbox" data-pref="notifica_contatti" style="width:18px;height:18px"${mia.notifica_contatti ? ' checked' : ''}/> Visitatori che cliccano su Chiama o WhatsApp</label></div>` : ''}
+    <div class="quick">
+      ${P.installa ? '<button class="btn ghost" data-a="inst">⤓ Installa app</button>' : ''}
+      ${!ios && pushOk() && perm !== 'denied' && !mia ? '<button class="btn primary" data-a="on">🔔 Attiva notifiche</button>' : ''}
+      ${mia ? '<button class="btn ghost" data-a="test">Invia notifica di prova</button><button class="btn danger" data-a="off">Disattiva su questo dispositivo</button>' : ''}
+    </div>
+    ${righe.length ? `<div class="section-t" style="margin-top:18px">Dispositivi collegati</div><div class="list">${righe.map(r => `<div class="list-row" style="cursor:default"><div><strong style="text-decoration:none">${esc(r.dispositivo || 'Dispositivo')}</strong>${sub && r.endpoint === sub.endpoint ? ' <span class="chip completato">questo</span>' : ''}<span class="sub">attivo dal ${fmtD(r.created_at)}${r.ultimo_invio ? ' · ultima notifica ' + fmtDT(r.ultimo_invio) : ''}</span></div><button class="icon-btn" data-rm="${r.id}" title="Rimuovi" aria-label="Rimuovi dispositivo">✕</button></div>`).join('')}</div>` : ''}`;
+  const again = () => pannelloNotifiche(box);
+  $('[data-a=inst]', box)?.addEventListener('click', async () => { P.installa.prompt(); await P.installa.userChoice; P.installa = null; again(); });
+  $('[data-a=on]', box)?.addEventListener('click', async e => {
+    e.target.disabled = true;
+    try { await attivaNotifiche(); toast('Notifiche attivate ✓'); await inviaProva().catch(() => {}); } catch (x) { toast(x.message || errMsg(x), true); }
+    again();
+  });
+  $('[data-a=off]', box)?.addEventListener('click', async () => { try { await disattivaNotifiche(); toast('Notifiche disattivate'); } catch (x) { toast(errMsg(x), true); } again(); });
+  $('[data-a=test]', box)?.addEventListener('click', async e => {
+    e.target.disabled = true;
+    try { const r = await inviaProva(); toast(r?.inviate ? `Notifica inviata a ${r.inviate} ${r.inviate === 1 ? 'dispositivo' : 'dispositivi'}` : 'Nessun dispositivo raggiunto', !r?.inviate); }
+    catch (x) { toast(errMsg(x), true); }
+    e.target.disabled = false; setTimeout(again, 1500);
+  });
+  $$('[data-pref]', box).forEach(c => c.onchange = async () => {
+    try { await q(sb.from('push_iscrizioni').update({ [c.dataset.pref]: c.checked }).eq('id', mia.id)); toast('Preferenza salvata'); } catch (x) { toast(errMsg(x), true); c.checked = !c.checked; }
+  });
+  $$('[data-rm]', box).forEach(b => b.onclick = async () => {
+    const r = righe.find(x => x.id === b.dataset.rm);
+    if (!(await confirmBox('Rimuovere il dispositivo?', `<b>${esc(r.dispositivo || 'Dispositivo')}</b> non riceverà più notifiche.`, 'Rimuovi'))) return;
+    try { await q(sb.from('push_iscrizioni').delete().eq('id', r.id)); if (sub && r.endpoint === sub.endpoint) await sub.unsubscribe().catch(() => {}); toast('Dispositivo rimosso'); } catch (x) { toast(errMsg(x), true); }
+    again();
+  });
 }
 
 /* ---------------- Avvio ---------------- */

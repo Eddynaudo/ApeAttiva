@@ -5,18 +5,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <meta name="theme-color" content="#183b2b"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Ape Attiva"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <title>Area riservata | Ape Attiva</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="admin.css?v=1"/>
+<link rel="icon" href="favicon.ico" sizes="any"/><link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png"/><link rel="apple-touch-icon" href="img/apple-touch-icon.png"/><link rel="stylesheet" href="admin.css?v=2"/>
 </head>
 <body>
 
 <!-- ============ LOGIN ============ -->
 <section id="login" class="login" hidden>
   <div class="login-card">
-    <a class="brand" href="index.html"><span class="brand-icon">✳</span><span>APE ATTIVA<small>AREA RISERVATA</small></span></a>
+    <a class="brand" href="index.html"><img class="brand-logo" src="img/logo-128.webp" srcset="img/logo-128.webp 1x, img/logo-256.webp 2x" width="58" height="58" alt=""/><span>APE ATTIVA<small>AREA RISERVATA</small></span></a>
     <h1>Accedi al CRM</h1>
     <p class="muted">Gestione clienti, lavori e andamento del sito.</p>
     <form id="login-form" autocomplete="on" novalidate>
@@ -39,7 +44,7 @@
 <!-- ============ APP ============ -->
 <div id="app" class="app" hidden>
   <aside class="side">
-    <a class="brand" href="index.html" title="Vai al sito"><span class="brand-icon">✳</span><span>APE ATTIVA<small>CRM</small></span></a>
+    <a class="brand" href="index.html" title="Vai al sito"><img class="brand-logo" src="img/logo-128.webp" srcset="img/logo-128.webp 1x, img/logo-256.webp 2x" width="58" height="58" alt=""/><span>APE ATTIVA<small>CRM</small></span></a>
     <nav class="side-nav" id="nav">
       <a href="#dashboard" data-view="dashboard"><i data-ico="home"></i><span>Dashboard</span></a>
       <a href="#clienti" data-view="clienti"><i data-ico="users"></i><span>Clienti</span></a>
@@ -81,7 +86,8 @@
 <div class="boot" id="boot"><span class="spinner"></span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=1"></script>
-<script src="admin.js?v=2"></script>
+<script src="config.js?v=2"></script>
+<script src="comuni.js?v=1"></script>
+<script src="admin.js?v=4"></script>
 </body>
 </html>
